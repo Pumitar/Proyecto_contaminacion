@@ -3,11 +3,12 @@ import discord
 from discord.ext import commands
 import os, random, requests
 from dotenv import load_dotenv
-import sqlite3  
+from repositories.usuarios_repository import UsuariosRepository
+from repositories.preguntas_repository import PreguntasRepository
+
 
 # Creamos la conexión a la base de datos
-conexion = sqlite3.connect("contaminacion.db")
-cursorBD = conexion.cursor()
+
 
 # Cargamos las variables de entorno
 load_dotenv()
@@ -20,29 +21,6 @@ intents.message_content = True
 bot = commands.Bot(command_prefix="$", intents=intents)
 
 
-# Evento que se activa cuando el bot se conecta correctamente
-def registrar_usuario(id_discord, usuario):
-    try:
-        cursorBD.execute(
-            "INSERT INTO usuarios (id_discord, usuario, coins) VALUES (?, ?, ?)",
-            (id_discord, usuario, 0)
-        )
-        conexion.commit()
-        return True
-    except sqlite3.IntegrityError:
-        return False
-
-
-def obtener_pregunta_ecologica():
-    cursorBD.execute("SELECT * FROM preguntas ORDER BY RANDOM() LIMIT 1")
-    return cursorBD.fetchone()
-
-
-def obtener_ranked_usuarios(limit=10):
-    cursorBD.execute("SELECT * FROM usuarios ORDER BY coins DESC LIMIT ?", (limit,))
-    return cursorBD.fetchall()
-    
-    
 @bot.event
 async def on_ready():
     print(f"Hemos iniciado sesión como {bot.user}")
@@ -51,7 +29,9 @@ async def on_ready():
 @bot.command()
 async def question(ctx):
     username = ctx.author.name
-    opcion = obtener_pregunta_ecologica()
+    
+    preguntas_repository = PreguntasRepository()
+    opcion = preguntas_repository.obtener_pregunta_ecologica()
     print(opcion)
     await ctx.send(f"{username} la pregunta es:\n{opcion[1]}")
     
@@ -75,7 +55,8 @@ async def register(ctx):
     user_id = ctx.author.id
     username = ctx.author.name
     
-    if registrar_usuario(user_id, username):
+    usuarios_repository = UsuariosRepository()
+    if usuarios_repository.registrar_usuario(user_id, username):
         await ctx.send(f"¡Bienvenido {username}! Has sido registrado exitosamente. 🌱")
     else:
         await ctx.send(f"{username}, ya estás registrado en el sistema. 😊")
@@ -83,7 +64,9 @@ async def register(ctx):
 
 @bot.command()
 async def top(ctx):
-    usuarios = obtener_ranked_usuarios()
+    usuarios_repository = UsuariosRepository()
+
+    usuarios = usuarios_repository.obtener_ranked_usuarios()
     if not usuarios:
         await ctx.send("No hay usuarios registrados.")
         return
