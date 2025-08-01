@@ -5,9 +5,7 @@ import os, random, requests
 from dotenv import load_dotenv
 from repositories.usuarios_repository import UsuariosRepository
 from repositories.preguntas_repository import PreguntasRepository
-
-
-# Creamos la conexión a la base de datos
+from models.usuario import Usuario
 
 
 # Cargamos las variables de entorno
@@ -29,6 +27,11 @@ async def on_ready():
 @bot.command()
 async def question(ctx):
     username = ctx.author.name
+    usuarios_repository = UsuariosRepository()
+    usuario = usuarios_repository.get_usuario(username)
+    if not usuario:
+        await ctx.send(f"{username}, no estás registrado. Usa el comando $register para registrarte.")
+        return
     
     preguntas_repository = PreguntasRepository()
     opcion = preguntas_repository.obtener_pregunta_ecologica()
@@ -42,8 +45,12 @@ async def question(ctx):
         respuesta_usuario = await bot.wait_for('message', check=check, timeout=30.0)
         
         if respuesta_usuario.content.lower() == opcion[2].lower():
+            usuario.modificar_coins(opcion[3])
+            usuarios_repository.actualizar_coins(usuario)
             await ctx.send(f"¡Correcto! {username}. ¡Has ganado {opcion[3]} coins 🌟!")
         else:
+            usuario.modificar_coins(opcion[4])
+            usuarios_repository.actualizar_coins(usuario)
             await ctx.send(f"Incorrecto {username}. La respuesta correcta era: {opcion[2]}\nHas perdido {opcion[4]} coins 😢")
             
     except TimeoutError:
@@ -52,14 +59,13 @@ async def question(ctx):
 
 @bot.command()
 async def register(ctx):
-    user_id = ctx.author.id
-    username = ctx.author.name
-    
+    user = Usuario(None, ctx.author.id, ctx.author.name)
     usuarios_repository = UsuariosRepository()
-    if usuarios_repository.registrar_usuario(user_id, username):
-        await ctx.send(f"¡Bienvenido {username}! Has sido registrado exitosamente. 🌱")
+    
+    if usuarios_repository.registrar_usuario(user):
+        await ctx.send(f"¡Bienvenido {user.username}! Has sido registrado exitosamente. 🌱")
     else:
-        await ctx.send(f"{username}, ya estás registrado en el sistema. 😊")
+        await ctx.send(f"{user.username}, ya estás registrado en el sistema. 😊")
 
 
 @bot.command()
