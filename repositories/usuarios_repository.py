@@ -33,7 +33,8 @@ class UsuariosRepository:
         with get_db_connection() as conexion:
             cursorBD = conexion.cursor() 
             cursorBD.execute("SELECT * FROM usuarios ORDER BY coins DESC LIMIT ?", (limit,))
-            return cursorBD.fetchall()
+            return cursorBD.fetchall() 
+    
     
     def actualizar_coins(self, user: Usuario):
         with get_db_connection() as conexion:
@@ -44,3 +45,13 @@ class UsuariosRepository:
             )
             conexion.commit()
             return True
+        
+    def obtener_informacion_usuario(self, id_discord):
+        with get_db_connection() as conexion:
+            cursorBD = conexion.cursor()
+            cursorBD.execute("SELECT * FROM usuarios WHERE id_discord = ?", (id_discord,))
+            usuario_db = cursorBD.fetchone()
+            if usuario_db:
+                return Usuario(usuario_db[0], usuario_db[1], usuario_db[2], usuario_db[3])
+            else:
+                return None
