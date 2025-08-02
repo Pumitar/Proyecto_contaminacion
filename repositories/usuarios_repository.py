@@ -27,7 +27,6 @@ class UsuariosRepository:
                 return True
             except sqlite3.IntegrityError:
                 return False
-
         
     def obtener_ranked_usuarios(self, limit=10):
         with get_db_connection() as conexion:
@@ -55,3 +54,4 @@ class UsuariosRepository:
                 return Usuario(usuario_db[0], usuario_db[1], usuario_db[2], usuario_db[3])
             else:
                 return None
+            

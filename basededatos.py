@@ -36,6 +36,20 @@ def tabla_preguntas():
             """CREATE TABLE preguntas (id integer primary key autoincrement, pregunta text, respuesta text, ganancia integer, perdida integer) """
         )
         return False
+    
+def tabla_historial():
+    cursorBD.execute(
+        """SELECT COUNT(name) FROM sqlite_master WHERE type='table' AND name = '{}' """.format(
+            "historial"
+        )
+    )
+    if cursorBD.fetchone()[0] == 1:
+        return True
+    else:
+        cursorBD.execute(
+            """CREATE TABLE historial (id integer primary key autoincrement, id_usuario integer, id_pregunta integer, coins integer, fecha integer, respuesta text) """
+        )
+        return False
 
 
 def insertar_pregunta(pregunta, respuesta, ganancia=0, perdida=0):
@@ -91,7 +105,7 @@ preguntas = [
 
 tabla_usuarios()
 tabla_preguntas()
-
+tabla_historial()
 
 for p in preguntas:
     insertar_pregunta(p["pregunta"], p["respuesta"], p["ganancia"], p["perdida"])
