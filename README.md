@@ -59,7 +59,8 @@
 
 - Sitio web oficial del bot  
 - Reproducción de música en canales de voz  
-- Nuevas acciones:  
+- sistema anti-spam 
+- Nuevos comandos:  
   - **`$clean`**: Borra todos los mensajes del canal.  
   - **`$shop`**: Una tienda donde se podrán comprar roles temporales o permanentes.
-
+  - **`$eco-tip`**: Dar datos reales sobre el cambio climático o consejos diarios
