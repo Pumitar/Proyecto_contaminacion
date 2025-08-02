@@ -26,7 +26,7 @@ async def question(ctx):
     usuario = usuarios_repository.get_usuario(username)
     if not usuario:
         await ctx.send(
-            f"{username}, no estás registrado. Usa el comando $register para registrarte."
+            f"No estás registrado. Usa el comando $register para registrarte."
         )
         return
 
@@ -54,7 +54,7 @@ async def question(ctx):
                 respuesta_usuario.created_at,
                 respuesta_usuario.content,
             )
-            await ctx.send(f"¡Correcto! {username}. ¡Has ganado {opcion[3]} coins 🌟!")
+            await ctx.send(f"¡Correcto! {username}. ¡Has ganado {opcion[3]} eco-coins 🌟!")
         else:
             usuario.modificar_coins(opcion[4])
             usuarios_repository.actualizar_coins(usuario)
@@ -66,7 +66,7 @@ async def question(ctx):
                 respuesta_usuario.content,
             )
             await ctx.send(
-                f"Incorrecto {username}. La respuesta correcta era: {opcion[2]}\nHas perdido {opcion[4]} coins 😢"
+                f"Incorrecto {username}. La respuesta correcta era: {opcion[2]}\nHas perdido {opcion[4]} eco-coins 😢"
             )
 
     except TimeoutError:
@@ -99,7 +99,7 @@ async def ranking(ctx):
 
     mensaje = "🏆 **Ranking de Usuarios Ecologicos** 🏆\n"
     for i, u in enumerate(usuarios, start=1):
-        mensaje += f"{i}. {u[2]} - {u[3]} coins\n"
+        mensaje += f"{i}. {u[2]} - {u[3]} eco-coins\n"
 
     await ctx.send(mensaje)
 
@@ -108,11 +108,12 @@ async def ranking(ctx):
 async def info(ctx):
     usuarios_repository = UsuariosRepository()
     usuario = usuarios_repository.obtener_informacion_usuario(ctx.author.id)
+    print(usuario)
     if usuario:
-        await ctx.send(f"{usuario.username}, tienes {usuario.coins} coins.")
+        await ctx.send(f"{usuario.username}, tienes {usuario.coins} eco-coins.")
     else:
         await ctx.send(
-            f"{usuario.username}, no estás registrado. Usa el comando $register para registrarte."
+            f"No estás registrado. Usa el comando $register para registrarte."
         )
 
 
@@ -121,12 +122,21 @@ async def history(ctx):
     usuarios_repository = UsuariosRepository()
     history_repository = HistoryRepository()
     preguntas_repository = PreguntasRepository()
+    
     usuario = usuarios_repository.get_usuario(ctx.author.name)
+    if not usuario:
+        await ctx.send(f"No estás registrado. Usa el comando $register para registrarte.")
+        return
+
     history = history_repository.get_by_user(usuario)
+    if len(history) == 0:
+        await ctx.send("No tienes historial de preguntas.")
+        return
+    
     mensaje = "Historial de Preguntas:\n"
     for h in history:
         pregunta = preguntas_repository.obtener_pregunta(h[2])
-        fecha = datetime.strptime(str(h[4]), '%Y-%m-%d %H:%M:%S.%f%z')
-        fecha_formateada = fecha.strftime('%d/%m/%Y %H:%M')
-        mensaje += f"Pregunta: {pregunta[1]}, Respuesta:, {h[5]}, Coins: {h[3]}, Fecha: {fecha_formateada}\n"
+        fecha = datetime.strptime(str(h[4]), "%Y-%m-%d %H:%M:%S.%f%z")
+        fecha_formateada = fecha.strftime("%d/%m/%Y %H:%M")
+        mensaje += f"Pregunta: {pregunta[1]}, Respuesta:, {h[5]}, Eco-coins: {h[3]}, Fecha: {fecha_formateada}\n"
     await ctx.send(mensaje)
