@@ -10,17 +10,23 @@ from repositories.usuarios_repository import UsuariosRepository
 from repositories.preguntas_repository import PreguntasRepository
 from repositories.history_repository import HistoryRepository
 from models.usuario import Usuario
+from services.history_services import HistoryService
+from services.preguntas_services import PreguntaService
+from services.usuarios_services import UsuarioService
 
 # Configuramos los "intents" para que el bot pueda leer el contenido de los mensajes
 intents = discord.Intents.default()
 intents.message_content = True
 
 # Creamos el bot con el prefijo de comandos '$' y los intents configurados
-bot = commands.Bot(command_prefix="$", intents=intents)
+bot = commands.Bot(command_prefix="#", intents=intents)
 
 SONG_QUEUE = {}
 GUILD_ID = 954872883828650084
 
+usuario_service = UsuarioService(UsuariosRepository())
+pregunta_service = PreguntaService(PreguntasRepository())
+history_service = HistoryService(HistoryRepository())
 
 @bot.event
 async def on_ready():
@@ -29,36 +35,59 @@ async def on_ready():
     
     print(f"Hemos iniciado sesión como {bot.user}")
 
+@bot.command()
+async def private(ctx):
+    usuario = usuario_service.obtener_por_username(ctx.author.name)
+    if not usuario:
+        await ctx.send(
+            f"No estás registrado. Usa el comando #register para registrarte.")
+        return
+    await ctx.author.send("Bienvenido usuario aqui te envio la informacion")
+
 
 @bot.command()
-async def register(ctx):
-    user = Usuario(None, ctx.author.id, ctx.author.name)
-    usuarios_repository = UsuariosRepository()
-
-    if usuarios_repository.registrar_usuario(user):
+async def clear(ctx, amount: int):
+    usuario = usuario_service.obtener_por_username(ctx.author.name)
+    if not usuario:
         await ctx.send(
-            f"¡Bienvenido {user.username}! Has sido registrado exitosamente. 🌱"
+            f"No estás registrado. Usa el comando #register para registrarte.")
+        return
+    
+    if amount <= 0:
+        await ctx.send("Por favor, ingresa la cantidad de mensajes que deseas borrar.")
+        return
+    
+    if amount > 50:
+        await ctx.send("No puedes borrar más de 50 mensajes a la vez.")
+        return
+    
+    deleted = await ctx.channel.purge(limit=amount + 1)
+    await ctx.send(f"Se eliminaron {len(deleted) - 1} mensajes.")
+    await asyncio.sleep(2)
+    await ctx.channel.purge(limit=1)
+    
+@bot.command()
+async def register(ctx):
+    user, is_created = usuario_service.crear(ctx.author.id, ctx.author.name, ctx.author.display_name, ctx.author.avatar.url)
+    if is_created:
+        await ctx.send(
+            f"¡Bienvenido {user.display_name}! Has sido registrado exitosamente. 🌱"
         )
     else:
-        await ctx.send(f"{user.username}, ya estás registrado en el sistema. 😊")
+        await ctx.send(f"{user.display_name}, ya estás registrado en el sistema. 😊")
         
         
 @bot.command()
 async def question(ctx):
-    username = ctx.author.name
-    usuarios_repository = UsuariosRepository()
-    usuario = usuarios_repository.get_usuario(username)
+    usuario = usuario_service.obtener_por_username(ctx.author.name)
     if not usuario:
         await ctx.send(
-            f"No estás registrado. Usa el comando $register para registrarte."
-        )
+            f"No estás registrado. Usa el comando #register para registrarte.")
         return
 
-    preguntas_repository = PreguntasRepository()
-    historial_repository = HistoryRepository()
-    opcion = preguntas_repository.obtener_pregunta_ecologica()
-    print(opcion)
-    await ctx.send(f"{username} la pregunta es:\n{opcion[1]}")
+    
+    p = pregunta_service.obtener_pregunta_random()
+    await ctx.send(f"{usuario.display_name} la pregunta es:\n{p.pregunta}")
 
     def check(message):
         return message.author == ctx.author and message.channel == ctx.channel
@@ -67,94 +96,98 @@ async def question(ctx):
         # Espera la respuesta del usuario por 30 segundos
         respuesta_usuario = await bot.wait_for("message", check=check, timeout=30.0)
 
-        if respuesta_usuario.content.lower() == opcion[2].lower():
-            usuario.modificar_coins(opcion[3])
-            usuarios_repository.actualizar_coins(usuario)
+        if respuesta_usuario.content.lower() == p.respuesta.lower():
+
+            usuario_service.actualizar_coins(usuario, p.ganancia)
+            
             print(respuesta_usuario.created_at)
-            historial_repository.insert_history(
+            history_service.insertar(
                 usuario.id,
-                opcion[0],
-                opcion[3],
+                p.id,
+                p.ganancia,
                 respuesta_usuario.created_at,
-                respuesta_usuario.content,
+                respuesta_usuario.content,    
             )
-            await ctx.send(f"¡Correcto! {username}. ¡Has ganado {opcion[3]} eco-coins 🌟!")
+            await ctx.send(f"¡Correcto! {usuario.display_name}. ¡Has ganado {p.ganancia} eco-coins 🌟!")
         else:
-            usuario.modificar_coins(opcion[4])
-            usuarios_repository.actualizar_coins(usuario)
-            historial_repository.insert_history(
+            usuario_service.actualizar_coins(usuario, p.perdida)
+
+            history_service.insertar(
                 usuario.id,
-                opcion[0],
-                opcion[4],
+                p.id,
+                p.perdida,
                 respuesta_usuario.created_at,
                 respuesta_usuario.content,
             )
             await ctx.send(
-                f"Incorrecto {username}. La respuesta correcta era: {opcion[2]}\nHas perdido {opcion[4]} eco-coins 😢"
+                f"Incorrecto {usuario.display_name}. La respuesta correcta era: {p.respuesta}\nHas perdido {p.perdida} eco-coins 😢"
             )
 
     except TimeoutError:
         await ctx.send(
-            f"Se acabó el tiempo, {username}! La respuesta correcta era: {opcion[2]}"
+            f"Se acabó el tiempo, {usuario.display_name}! La respuesta correcta era: {p.respuesta}"
         )
 
 
 @bot.command()
 async def ranking(ctx):
-    usuarios_repository = UsuariosRepository()
-
-    usuarios = usuarios_repository.obtener_ranked_usuarios()
+    usuario = usuario_service.obtener_por_username(ctx.author.name)
+    if not usuario:
+        await ctx.send(
+            f"No estás registrado. Usa el comando #register para registrarte.")
+        return
+    
+    usuarios = usuario_service.obtener_ranking()
     if not usuarios:
         await ctx.send("No hay usuarios registrados.")
         return
 
     mensaje = "🏆 **Ranking de Usuarios Ecologicos** 🏆\n"
     for i, u in enumerate(usuarios, start=1):
-        mensaje += f"{i}. {u[2]} - {u[3]} eco-coins\n"
-
+        mensaje += f"{i}. {u.display_name} - {u.coins} eco-coins\n"
     await ctx.send(mensaje)
 
 
 @bot.command()
 async def info(ctx):
-    usuarios_repository = UsuariosRepository()
-    usuario = usuarios_repository.obtener_informacion_usuario(ctx.author.id)
-    print(usuario)
+    usuario = usuario_service.obtener_por_discord_id(ctx.author.id)
     if usuario:
-        await ctx.send(f"{usuario.username}, tienes {usuario.coins} eco-coins.")
+        await ctx.send(f"{usuario.display_name}, tienes {usuario.coins} eco-coins.")
     else:
         await ctx.send(
-            f"No estás registrado. Usa el comando $register para registrarte."
+            f"No estás registrado. Usa el comando #register para registrarte."
         )
 
 
 @bot.command()
 async def history(ctx):
-    usuarios_repository = UsuariosRepository()
-    history_repository = HistoryRepository()
-    preguntas_repository = PreguntasRepository()
-    
-    usuario = usuarios_repository.get_usuario(ctx.author.name)
+    usuario = usuario_service.obtener_por_username(ctx.author.name)
     if not usuario:
-        await ctx.send(f"No estás registrado. Usa el comando $register para registrarte.")
+        await ctx.send(f"No estás registrado. Usa el comando #register para registrarte.")
         return
 
-    history = history_repository.get_by_user(usuario)
+    history = history_service.obtener_por_usuario(usuario)
     if len(history) == 0:
         await ctx.send("No tienes historial de preguntas.")
         return
     
     mensaje = "Historial de Preguntas:\n"
     for h in history:
-        pregunta = preguntas_repository.obtener_pregunta(h[2])
-        fecha = datetime.strptime(str(h[4]), "%Y-%m-%d %H:%M:%S.%f%z")
+        p = pregunta_service.obtener_pregunta(h.id_pregunta)
+        fecha = datetime.strptime(str(h.fecha), "%Y-%m-%d %H:%M:%S.%f%z")
         fecha_formateada = fecha.strftime("%d/%m/%Y %H:%M")
-        mensaje += f"Pregunta: {pregunta[1]}, Respuesta:, {h[5]}, Eco-coins: {h[3]}, Fecha: {fecha_formateada}\n"
+        mensaje += f"Pregunta: {p.pregunta}, Respuesta:, {p.respuesta}, Eco-coins: {h.coins}, Fecha: {fecha_formateada}\n"
     await ctx.send(mensaje)
 
 
 @bot.command(pass_context=True)
 async def conectar(ctx):
+    usuario = usuario_service.obtener_por_username(ctx.author.name)
+    if not usuario:
+        await ctx.send(
+            f"No estás registrado. Usa el comando #register para registrarte.")
+        return
+    
     canal = ctx.message.author.voice.channel
     if not canal:
         await ctx.send("No estás conectado a un canal de voz.")
@@ -167,7 +200,13 @@ async def conectar(ctx):
         
         
 @bot.command(pass_context=True)
-async def desconectar(ctx):
+async def desconnect(ctx):
+    usuario = usuario_service.obtener_por_username(ctx.author.name)
+    if not usuario:
+        await ctx.send(
+            f"No estás registrado. Usa el comando #register para registrarte.")
+        return
+    
     voz = get(bot.voice_clients, guild=ctx.guild)
     await voz.disconnect()
     
@@ -195,7 +234,17 @@ def extract_stream(video_url):
 
 # --- Comando !play ---
 @bot.command()
-async def play(ctx, *, song_query: str):
+async def play(ctx, *, song_query: str=""):
+    usuario = usuario_service.obtener_por_username(ctx.author.name)
+    if not usuario:
+        await ctx.send(
+            f"No estás registrado. Usa el comando #register para registrarte.")
+        return
+    
+    if song_query == "":
+        await ctx.send("Tienes que poner el titulo de la cancion.")
+        return
+    
     if not ctx.author.voice:
         await ctx.send("No estás conectado a un canal de voz.")
         return
@@ -249,6 +298,12 @@ async def play(ctx, *, song_query: str):
 # --- Reproducir siguiente canción ---
 @bot.command()
 async def next(ctx):
+    usuario = usuario_service.obtener_por_username(ctx.author.name)
+    if not usuario:
+        await ctx.send(
+            f"No estás registrado. Usa el comando #register para registrarte.")
+        return
+    
     voz = ctx.guild.voice_client
     if not voz or not voz.is_connected():
         await ctx.send("No estoy conectado a un canal de voz.")
@@ -296,6 +351,12 @@ async def next_song(voz, guild_id, channel):
 # --- Comando !skip para saltar canción ---
 @bot.command()
 async def skip(ctx):
+    usuario = usuario_service.obtener_por_username(ctx.author.name)
+    if not usuario:
+        await ctx.send(
+            f"No estás registrado. Usa el comando #register para registrarte.")
+        return
+    
     vc = ctx.guild.voice_client
     if vc and vc.is_playing():
         vc.stop()
@@ -303,10 +364,21 @@ async def skip(ctx):
     else:
         await ctx.send("❌ No hay ninguna canción reproduciéndose.")
 
-# --- Evento on_ready para saber que el bot está listo ---
-@bot.event
-async def on_ready():
-    print(f"✅ Bot conectado como {bot.user}")
-        
+@bot.command()
+async def pause(ctx):
+    usuario = usuario_service.obtener_por_username(ctx.author.name)
+    if not usuario:
+        await ctx.send(f"No estás registrado. Usa el comando #register para registrarte.")
+        return
+    
+    vc = ctx.guild.voice_client
+    if vc.is_playing():
+        vc.pause()
+        await ctx.send("⏸️ Canción pausada.")
+    elif vc.is_paused():
+        vc.resume()
+        await ctx.send("▶️ Reproducción reanudada.")
+    else:
+        await ctx.send("❌ No hay ninguna canción reproduciéndose o pausada.")
 
     

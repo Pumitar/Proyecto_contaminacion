@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Template de Bot de Discord</title>
+    <link rel="stylesheet" href="../static/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="main-container">
+
+        <div class="header-section">
+            <div class="profile-picture">
+                <img src="../static/images/cosmo.png" alt="Bot Profile Picture">
+            </div>
+            <div class="description-box">
+                <h2>Descripción del Bot</h2>
+                <p>Este es un bot de Discord con múltiples funciones. Ofrece un sistema de economía, moderación
+                    avanzada, y herramientas de entretenimiento para mejorar la experiencia de tu servidor.</p>
+            </div>
+        </div>
+
+        <div class="tab-section">
+            <div class="tab active" data-tab="ranking">Ranking</div>
+            <div class="tab " data-tab="commands">Comandos</div>
+            <div class="tab " data-tab="comments">Comentarios de Usuarios</div>
+        </div>
+
+        <div class="content-container">
+            <div class="tab-content" id="commands-content" style="display: none;">
+                <h3>Comandos</h3>
+                <div class=" list-item">
+                <div class="item-text">
+                    <strong>!help</strong>
+                    <p>Muestra todos los comandos disponibles.</p>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="item-text">
+                    <strong>!register</strong>
+                    <p>Registra al usuario.</p>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="item-text">
+                    <strong>!info</strong>
+                    <p>Muestra tu informacion.</p>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="item-text">
+                    <strong>!question</strong>
+                    <p>Resuelve las preguntas para obtener eco-coins.</p>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="item-text">
+                    <strong>!history</strong>
+                    <p>Muestra tu historial completo.</p>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="item-text">
+                    <strong>!private</strong>
+                    <p>habla con el bot en privado.</p>
+                </div>
+            </div>
+
+            <h3>Comandos Premium</h3>
+            <div class="list-item">
+                <div class="item-text">
+                    <strong>!play [musica]</strong>
+                    <p>Entra al canal de voz y reproduce la musica que pediste. Si pones otra musica, se agrega a la
+                        cola de reproduccion</p>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="item -text">
+                    <strong>!next</strong>
+                    <p>Pasa a la siguiente cancion.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="comments-content" style="display: none;">
+            <h3>Comentarios de Usuarios</h3>
+            <div class="list-item">
+                <div class="item-icon" style="background-color: #888;"></div>
+                <div class="item-text">
+                    <strong>Usuario1</strong>
+                    <p class="user-rating">★★★★★</p>
+                    <p>El mejor bot de economía, me encanta!</p>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="item-icon" style="background-color: #888;"></div>
+                <div class="item-text">
+                    <strong>Usuario2</strong>
+                    <p class="user-rating">★★★★☆</p>
+                    <p>Muy bueno, pero podría tener más comandos.</p>
+                </div>
+            </div>
+            <div class="list-item">
+                <div class="item-icon" style="background-color: #888;"></div>
+                <div class="item-text">
+                    <strong>Usuario3</strong>
+                    <p class="user-rating">★★★★★</p>
+                    <p>Funciona a la perfección, sin bugs!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="ranking-content">
+            <!-- <h3>Ranking</h3>
+                <div class="ranking-item">
+                    <div class="user-info">
+                        <div class="item-icon" style="background-color: #888;"></div>
+                        <span>UsuarioA</span>
+                    </div>
+                    <span class="score">15000 monedas</span>
+                </div> -->
+
+        </div>
+    </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.tab-section .tab');
+            const tabContents = {
+                'ranking': document.getElementById('ranking-content'),
+                'commands': document.getElementById('commands-content'),
+                'comments': document.getElementById('comments-content')
+            };
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const tabId = tab.getAttribute('data-tab');
+                    for (const id in tabContents) {
+                        tabContents[id].style.display = 'none';
+                    }
+                    tabContents[tabId].style.display = 'block';
+                });
+            });
+        });
+        async function getRanking() {
+            try {
+                const respuesta = await fetch('http://localhost:3000/api/ranking', { method: "GET" })
+                if (!respuesta.ok) {
+                    throw new Error("no esta bien")
+                }
+                const resp = await respuesta.json();
+                console.log(resp)
+                return resp
+
+            } catch (error) {
+                console.log(error)
+            }
+
+        }
+        
+        
+
+
+        function renderRanking(rankingArray) {
+            const rankingContainer = document.getElementById('ranking-content');
+
+            rankingContainer.innerHTML = `
+                <h3>Ranking</h3>
+                ${rankingArray.map(usuario => `
+                    <div class="ranking-item">
+                        <div class="user-info">
+                            <div class="item-icon">
+                                <img src="${usuario.avatar}" alt="${usuario.display_name}">
+                            </div>
+                            <span>${usuario.display_name}</span>
+                        </div>
+                        <span class="score">${usuario.coins} monedas</span>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        (async () => {
+            const ranking = await getRanking();
+            if (ranking) renderRanking(ranking);
+        })();
+
+    </script>
+
+</body>
+
+</html>
