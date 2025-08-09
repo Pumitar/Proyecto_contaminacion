@@ -1,10 +1,13 @@
 :root {
-    --color-dark-green: #2d4239;
-    --color-light-green: #5ca16d;
-    --color-white: #ffffff;
-    --color-light-gray: #ffffff;
-    --color-gray: #d4d4d4;
-    --color-dark-gray: #888888;
+    /* 🎨 Colores principales basados en Cosmo */
+    --color-dark-green: #0E1A14;   /* Fondo principal */
+    --color-light-green: #7FFF6E;  /* Verde Cosmo brillante */
+    --color-aqua: #4CE0B3;         /* Verde aqua */
+    --color-white: #E8F5E9;        /* Blanco verdoso */
+    --color-light-gray: #1f362a;   /* Fondo secundario */
+    --color-gray: #A5D6A7;         /* Verde grisáceo suave */
+    --color-dark-gray: #4A4A4A;    /* Gris oscuro */
+    --color-pink: #FF69B4;         /* Rosa acento */
 }
 
 body {
@@ -24,9 +27,9 @@ body {
     max-width: 1200px;
     background-color: var(--color-light-gray);
     border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     padding: 30px;
-    color: #333;
+    color: var(--color-white);
 }
 
 .header-section {
@@ -54,7 +57,7 @@ body {
 .description-box {
     flex-grow: 1;
     padding: 20px;
-    background-color: #f1f1f1;
+    background-color: #1B2A23; /* Fondo intermedio */
     border-radius: 10px;
 }
 
@@ -67,26 +70,9 @@ body {
 .tab-section {
     display: flex;
     flex-wrap: wrap;
+    padding-bottom: 10px;
     border-bottom: 2px solid var(--color-gray);
     margin-bottom: 20px;
-}
-
-.tab {
-    padding: 10px 20px;
-    cursor: pointer;
-    font-weight: 600;
-    color: var(--color-dark-gray);
-    border-bottom: 2px solid transparent;
-    transition: all 0.3s ease;
-}
-
-.tab:hover {
-    color: var(--color-light-green);
-}
-
-.tab.active {
-    color: var(--color-light-green);
-    border-bottom-color: var(--color-light-green);
 }
 
 .content-container {
@@ -97,14 +83,13 @@ body {
 
 .tab-content {
     flex-basis: 320%;
-    background-color: var(--color-white);
+    background-color: #1B2A23;
     border-radius: 10px;
     padding: 20px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 .tab-content h3 {
-    margin-top: 0;
     color: var(--color-light-green);
     font-size: 1.2rem;
 }
@@ -124,18 +109,18 @@ body {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    overflow: hidden; /* 🔥 clave para cortar la imagen */
+    overflow: hidden;
     background-color: var(--color-dark-gray);
     margin-right: 15px;
 }
+
 .item-icon img {
     width: 40px;
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
-    display: block; /* elimina espacio extra del inline img */
+    display: block;
 }
-
 
 .item-text {
     flex-grow: 1;
@@ -149,7 +134,7 @@ body {
 }
 
 .ranking-item .user-info {
-    display: flex;`
+    display: flex;
     align-items: center;
 }
 
@@ -160,11 +145,72 @@ body {
 
 .user-rating {
     color: gold;
-    font-size: 30px; 
+    font-size: 30px;
     margin: 7px;
 }
 
-/* Responsive design */
+/* Tabs */
+.tab {
+    position: relative;
+    font-size: 1.1em;
+    padding: 0.1em 0.2em;
+    border-radius: 0.9em;
+    background: linear-gradient(95deg, var(--color-aqua), var(--color-pink));
+    color: var(--color-white);
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 10px;
+    transition: transform 0.2s ease, color 0.3s ease, text-shadow 0.3s ease;
+    z-index: 0;
+}
+
+.tab span {
+    background: var(--color-dark-green);
+    border-radius: 0.9em;
+    padding: 0.4em 0.8em;
+    display: block;
+}
+
+/* Glow difuminado */
+.tab::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 0.5em;
+    z-index: -1;
+    background: linear-gradient(90deg, var(--color-aqua), var(--color-pink));
+    filter: blur(0);
+    opacity: 0;
+    transition: opacity 0.2s ease, filter 0.2s ease;
+}
+
+.tab:hover::before {
+    opacity: 1;
+    filter: blur(1.2em);
+}
+
+.tab:active::before {
+    filter: blur(0.2em);
+}
+
+.tab:active {
+    transform: scale(0.96);
+}
+
+.tab.active span {
+    background: var(--color-dark-green);
+}
+
+.tab.active {
+    color: var(--color-light-green);
+    border-bottom-color: var(--color-light-green);
+}
+
+.tab.active:hover {
+    text-shadow: 0 0 8px var(--color-light-green), 0 0 16px var(--color-light-green);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
     .header-section {
         flex-direction: column;
