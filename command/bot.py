@@ -66,9 +66,14 @@ async def clear(ctx, amount: int):
     await asyncio.sleep(2)
     await ctx.channel.purge(limit=1)
     
+    
 @bot.command()
 async def register(ctx):
-    user, is_created = usuario_service.crear(ctx.author.id, ctx.author.name, ctx.author.display_name, ctx.author.avatar.url)
+    avatar = None
+    if ctx.author.avatar:
+        avatar = ctx.author.avatar.url
+    
+    user, is_created = usuario_service.crear(ctx.author.id, ctx.author.name, ctx.author.display_name, avatar)
     if is_created:
         await ctx.send(
             f"¡Bienvenido {user.display_name}! Has sido registrado exitosamente. 🌱"
@@ -178,6 +183,11 @@ async def history(ctx):
         fecha_formateada = fecha.strftime("%d/%m/%Y %H:%M")
         mensaje += f"Pregunta: {p.pregunta}, Respuesta:, {p.respuesta}, Eco-coins: {h.coins}, Fecha: {fecha_formateada}\n"
     await ctx.send(mensaje)
+    
+@bot.command()
+async def website(ctx):
+    url = "https://w50p6t99-3000.brs.devtunnels.ms/"
+    await ctx.send(url)    
 
 
 @bot.command(pass_context=True)

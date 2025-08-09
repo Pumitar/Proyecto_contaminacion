@@ -1,13 +1,21 @@
 :root {
     /* 🎨 Colores principales basados en Cosmo */
-    --color-dark-green: #0E1A14;   /* Fondo principal */
-    --color-light-green: #7FFF6E;  /* Verde Cosmo brillante */
-    --color-aqua: #4CE0B3;         /* Verde aqua */
-    --color-white: #E8F5E9;        /* Blanco verdoso */
-    --color-light-gray: #1f362a;   /* Fondo secundario */
-    --color-gray: #A5D6A7;         /* Verde grisáceo suave */
-    --color-dark-gray: #4A4A4A;    /* Gris oscuro */
-    --color-pink: #FF69B4;         /* Rosa acento */
+    --color-dark-green: #0E1A14;
+    /* Fondo principal */
+    --color-light-green: #7FFF6E;
+    /* Verde Cosmo brillante */
+    --color-aqua: #4CE0B3;
+    /* Verde aqua */
+    --color-white: #E8F5E9;
+    /* Blanco verdoso */
+    --color-light-gray: #1f362a;
+    /* Fondo secundario */
+    --color-gray: #A5D6A7;
+    /* Verde grisáceo suave */
+    --color-dark-gray: #4A4A4A;
+    /* Gris oscuro */
+    --color-pink: #FF69B4;
+    /* Rosa acento */
 }
 
 body {
@@ -57,7 +65,8 @@ body {
 .description-box {
     flex-grow: 1;
     padding: 20px;
-    background-color: #1B2A23; /* Fondo intermedio */
+    background-color: #1B2A23;
+    /* Fondo intermedio */
     border-radius: 10px;
 }
 
@@ -228,4 +237,30 @@ body {
     .tab-content {
         flex-basis: 100%;
     }
+}
+
+.ranking-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#refresh-ranking {
+    background: var(--color-dark-green);
+    color: var(--color-white);
+    border: none;
+    padding: 0.3em 0.8em;
+    border-radius: 0.5em;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s ease;
+
+}
+
+#refresh-ranking:hover{
+    background: var(--color-light-green);
+    color: var(--color-light-gray);
+    
+
+
 }
