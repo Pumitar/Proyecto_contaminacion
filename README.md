@@ -1,4 +1,4 @@
-# Proyecto Bot Cosmo
+#  🍀 Proyecto Bot Cosmo 
 
 ## 🌱 Idea del Proyecto
 
