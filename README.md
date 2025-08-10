@@ -1,7 +1,5 @@
 # Proyecto Bot Cosmo
 
----
-
 ## 🌱 Idea del Proyecto
 
 > Un bot cuyo propósito es animar a los usuarios a competir entre ellos para ver quién sabe más sobre el medio ambiente.  
