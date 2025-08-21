@@ -7,6 +7,9 @@
     <title>Template de Bot de Discord</title>
     <link rel="stylesheet" href="../static/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        window.API_BASE_URL = "{{ api_base_url }}";
+    </script>
 </head>
 
 <body>
@@ -159,7 +162,7 @@
         });
         async function getRanking() {
             try {
-                const respuesta = await fetch('http://localhost:3000/api/ranking', { method: "GET" })
+                const respuesta = await fetch(window.API_BASE_URL + '/api/ranking', { method: "GET" })
                 if (!respuesta.ok) {
                     throw new Error("no esta bien")
                 }
